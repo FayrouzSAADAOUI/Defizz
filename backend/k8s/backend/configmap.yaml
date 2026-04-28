@@ -1,0 +1,29 @@
+# ConfigMap — config non-sensible du backend
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend-config
+  namespace: defizz
+data:
+  NODE_ENV:   "production"
+  PORT:       "4000"          # aligné sur REACT_APP_API_URL=http://localhost:4000
+  LOG_LEVEL:  "info"          # passer à "debug" pour la démo
+  DB_HOST:    "postgres"      # nom du Service Kubernetes = DNS interne
+  DB_PORT:    "5432"
+  DB_NAME:    "defizz"
+  DB_USER:    "postgres"
+  JWT_EXPIRES: "7d"
+
+---
+# Secret — valeurs sensibles
+# jwt: echo -n "defizz-jwt-secret-prod" | base64
+# db pwd: même valeur que postgres-secret
+apiVersion: v1
+kind: Secret
+metadata:
+  name: backend-secret
+  namespace: defizz
+type: Opaque
+data:
+  JWT_SECRET:  ZGVmaXp6LWp3dC1zZWNyZXQtcHJvZA==  # defizz-jwt-secret-prod
+  DB_PASSWORD: cGdwYXNzd29yZA==                    # pgpassword

@@ -1,0 +1,103 @@
+# Deployment backend — 3 replicas, 100% stateless
+#
+# Points pédagogiques démontrables :
+#   ✅ replicas: 3        → plusieurs pods traitent les requêtes en parallèle
+#   ✅ RollingUpdate      → mise à jour sans interruption de service
+#   ✅ livenessProbe      → redémarrage auto si le pod plante
+#   ✅ readinessProbe     → pas de trafic tant que le pod n'est pas prêt
+#   ✅ HOSTNAME auto      → chaque pod a un nom unique → démo /whoami
+#   ✅ envFrom ConfigMap  → config externalisée (12-factor)
+#   ✅ env from Secret    → données sensibles séparées
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: defizz
+  labels:
+    app: backend
+spec:
+  replicas: 3
+
+  selector:
+    matchLabels:
+      app: backend
+
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+        - name: backend
+          image: defizz-backend:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 4000
+
+          # Config non-sensible depuis ConfigMap
+          envFrom:
+            - configMapRef:
+                name: backend-config
+
+          # Valeurs sensibles depuis Secret
+          env:
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secret
+                  key: JWT_SECRET
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secret
+                  key: DB_PASSWORD
+            # HOSTNAME est injecté automatiquement par Kubernetes (= nom du Pod)
+            # C'est ce que /whoami utilise pour identifier quel Pod répond
+
+          # Probe de vivacité : Kubernetes redémarre le pod si /health échoue
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 4000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 3
+
+          # Probe de disponibilité : pas de trafic tant que pas prêt
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 4000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            failureThreshold: 2
+
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "300m"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend
+  namespace: defizz
+spec:
+  selector:
+    app: backend
+  ports:
+    - name: http
+      port: 4000
+      targetPort: 4000
+  type: ClusterIP   # Interne uniquement, exposé via Ingress

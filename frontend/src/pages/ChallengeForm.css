@@ -1,0 +1,81 @@
+/* ========================================
+   STYLES FORMULAIRES
+   ======================================== */
+
+.form-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 200px);
+  padding: 2rem 1rem;
+}
+
+.form-card {
+  background: white;
+  border-radius: 1rem;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
+  width: 100%;
+  max-width: 600px;
+  animation: slideUp 0.5s ease;
+}
+
+.form-card h1 {
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+  color: var(--text-dark);
+}
+
+.challenge-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+}
+
+.form-actions .btn-primary,
+.form-actions .btn-secondary {
+  flex: 1;
+}
+
+/* ========================================
+   ANIMATIONS
+   ======================================== */
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ========================================
+   RESPONSIF
+   ======================================== */
+
+@media (max-width: 600px) {
+  .form-card {
+    padding: 1.5rem;
+  }
+
+  .form-card h1 {
+    font-size: 1.5rem;
+  }
+
+  .form-actions {
+    flex-direction: column-reverse;
+  }
+
+  .form-actions button {
+    width: 100%;
+  }
+}
